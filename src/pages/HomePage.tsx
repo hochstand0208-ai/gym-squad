@@ -3,6 +3,7 @@ import type { User, Workout, WorkoutType } from '../types';
 import { isStrengthDetail, isCardioDetail } from '../types';
 import { saveWorkout, subscribeToDateWorkouts } from '../firebase';
 import { SuccessAnimation } from '../components/SuccessAnimation';
+import { useWorkouts } from '../WorkoutContext';
 
 const CARDIO_TYPES = ['ランニング', 'サイクリング', '水泳', 'ウォーキング', '縄跳び', 'その他'];
 
@@ -39,6 +40,7 @@ export function HomePage({ user }: Props) {
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [todayWorkouts, setTodayWorkouts] = useState<Workout[]>([]);
+  const { invalidateMonth } = useWorkouts();
 
   const today = toDateStr(new Date());
 
@@ -102,6 +104,9 @@ export function HomePage({ user }: Props) {
       }
       setSelectedType(null);
       setShowSuccess(true);
+      // カレンダー・ランキングのキャッシュを更新
+      const now2 = new Date();
+      invalidateMonth(now2.getFullYear(), now2.getMonth() + 1);
     } catch (e) {
       console.error(e);
       alert('保存に失敗しました。Firebase の設定を確認してください。');

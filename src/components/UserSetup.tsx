@@ -1,51 +1,111 @@
 import { useState } from 'react';
 import type { User } from '../types';
+import { useWorkouts } from '../WorkoutContext';
+
+type Screen = 'select' | 'register';
 
 const AVATARS = ['💪', '🦁', '🐯', '🐺', '🦊', '🐻', '🐼', '🦄', '🐸', '🦅', '🐉', '⚡', '🔥', '🌟', '👑', '🚀'];
+
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 interface Props {
   onComplete: (user: User) => void;
 }
 
-function generateId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
 export function UserSetup({ onComplete }: Props) {
+  const { users, usersLoading } = useWorkouts();
+  const [screen, setScreen] = useState<Screen>('select');
   const [nickname, setNickname] = useState('');
   const [avatar, setAvatar] = useState(AVATARS[0]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async () => {
+  // ─── ローディング中 ───────────────────────────────
+  if (usersLoading) {
+    return (
+      <div className="modal-overlay">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <div className="spinner" />
+          <span style={{ color: 'var(--text-secondary)', fontSize: 14 }}>読み込み中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── 既存ユーザー選択画面 ─────────────────────────
+  if (screen === 'select' && users.length > 0) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-box">
+          <div className="modal-title">🏋️ GYM SQUAD</div>
+          <div className="modal-subtitle">
+            あなたはどれですか？
+          </div>
+
+          <div className="existing-users-grid">
+            {users.map(u => (
+              <button
+                key={u.id}
+                className="existing-user-btn"
+                onClick={() => onComplete(u)}
+              >
+                <span style={{ fontSize: 38, lineHeight: 1 }}>{u.avatar}</span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>{u.nickname}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="divider" style={{ margin: '20px 0' }} />
+
+          <button
+            className="btn"
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-secondary)',
+              fontSize: 14,
+              border: '1.5px solid var(--border)',
+            }}
+            onClick={() => setScreen('register')}
+          >
+            ＋ 新規登録
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── 新規登録画面 ─────────────────────────────────
+  const handleSubmit = () => {
     const name = nickname.trim();
-    if (!name) {
-      setError('ニックネームを入力してください');
-      return;
-    }
-    if (name.length > 12) {
-      setError('12文字以内で入力してください');
-      return;
-    }
-    setSubmitting(true);
-    const user: User = {
-      id: generateId(),
-      nickname: name,
-      avatar,
-      createdAt: Date.now(),
-    };
+    if (!name) { setError('ニックネームを入力してください'); return; }
+    if (name.length > 12) { setError('12文字以内で入力してください'); return; }
+    const user: User = { id: generateId(), nickname: name, avatar, createdAt: Date.now() };
     onComplete(user);
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-box">
-        <div className="modal-title">🏋️ GYM SQUAD</div>
+        {users.length > 0 && (
+          <button
+            className="back-btn"
+            onClick={() => setScreen('select')}
+          >
+            ← 戻る
+          </button>
+        )}
+
+        <div className="modal-title" style={{ marginTop: users.length > 0 ? 8 : 0 }}>
+          {users.length === 0 ? '🏋️ GYM SQUAD' : '新規登録'}
+        </div>
         <div className="modal-subtitle">
-          チームに参加するために<br />ニックネームとアバターを設定してください
+          {users.length === 0
+            ? 'チームに参加するためにニックネームとアバターを設定してください'
+            : 'ニックネームとアバターを設定してください'}
         </div>
 
         <div style={{ marginBottom: 20 }}>
@@ -54,7 +114,7 @@ export function UserSetup({ onComplete }: Props) {
             type="text"
             placeholder="例：たろう、筋肉番長、etc."
             value={nickname}
-            onChange={(e) => { setNickname(e.target.value); setError(''); }}
+            onChange={e => { setNickname(e.target.value); setError(''); }}
             maxLength={12}
             autoFocus
           />
@@ -65,7 +125,7 @@ export function UserSetup({ onComplete }: Props) {
 
         <div className="form-label" style={{ marginBottom: 8 }}>アバター</div>
         <div className="avatar-grid">
-          {AVATARS.map((em) => (
+          {AVATARS.map(em => (
             <button
               key={em}
               className={`avatar-btn ${avatar === em ? 'selected' : ''}`}
@@ -79,10 +139,9 @@ export function UserSetup({ onComplete }: Props) {
         <button
           className="btn btn-primary"
           onClick={handleSubmit}
-          disabled={submitting}
           style={{ marginTop: 8 }}
         >
-          {submitting ? '登録中...' : 'はじめる！'}
+          はじめる！
         </button>
       </div>
     </div>

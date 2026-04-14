@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { User, Workout } from '../types';
-import { getAllUsers, getWorkoutsForMonth } from '../firebase';
+import { useWorkouts } from '../WorkoutContext';
 
 const MONTHS_JP = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 const FINE_PER_DAY = 100;
@@ -20,7 +20,7 @@ function daysInMonth(y: number, m: number) {
   return new Date(y, m, 0).getDate();
 }
 
-function calcMissedDays(workouts: Workout[], year: number, month: number): { missedDays: number; workedDays: number } {
+function calcStats(workouts: Workout[], year: number, month: number) {
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
   const lastDay = isCurrentMonth ? now.getDate() : daysInMonth(year, month);
@@ -30,10 +30,8 @@ function calcMissedDays(workouts: Workout[], year: number, month: number): { mis
 
   let missed = 0;
   for (let d = 1; d <= lastDay; d++) {
-    const dateStr = toDateStr(year, month, d);
-    if (!workedSet.has(dateStr)) missed++;
+    if (!workedSet.has(toDateStr(year, month, d))) missed++;
   }
-
   return { missedDays: missed, workedDays: workedSet.size };
 }
 
@@ -41,30 +39,28 @@ export function RankingPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [ranks, setRanks] = useState<UserRank[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const { users, usersLoading, monthCache, fetchMonth } = useWorkouts();
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([getAllUsers(), getWorkoutsForMonth(year, month)])
-      .then(([users, allWorkouts]) => {
-        const result: UserRank[] = users.map(user => {
-          const userWorkouts = allWorkouts.filter(w => w.userId === user.id);
-          const { missedDays, workedDays } = calcMissedDays(userWorkouts, year, month);
-          return {
-            user,
-            missedDays,
-            fine: missedDays * FINE_PER_DAY,
-            workedDays,
-          };
-        });
-        // Sort: most fines first (most missed days = most fine)
-        result.sort((a, b) => b.fine - a.fine);
-        setRanks(result);
+    fetchMonth(year, month);
+  }, [year, month, fetchMonth]);
+
+  const workouts = monthCache[`${year}-${month}`] ?? null;
+  const loading = workouts === null || usersLoading;
+
+  const ranks = useMemo<UserRank[]>(() => {
+    if (!workouts || users.length === 0) return [];
+    return users
+      .map(user => {
+        const uw = workouts.filter(w => w.userId === user.id);
+        const { missedDays, workedDays } = calcStats(uw, year, month);
+        return { user, missedDays, fine: missedDays * FINE_PER_DAY, workedDays };
       })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [year, month]);
+      .sort((a, b) => b.fine - a.fine);
+  }, [workouts, users, year, month]);
+
+  const totalPool = ranks.reduce((s, r) => s + r.fine, 0);
 
   const prevMonth = () => {
     if (month === 1) { setYear(y => y - 1); setMonth(12); }
@@ -78,8 +74,6 @@ export function RankingPage() {
     else setMonth(m => m + 1);
   };
 
-  const totalPool = ranks.reduce((s, r) => s + r.fine, 0);
-
   const isNextDisabled = (() => {
     const nextM = month === 12 ? 1 : month + 1;
     const nextY = month === 12 ? year + 1 : year;
@@ -88,7 +82,6 @@ export function RankingPage() {
 
   return (
     <div className="page">
-      {/* Header */}
       <div className="ranking-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -109,17 +102,25 @@ export function RankingPage() {
       <div className="pool-card">
         <div className="pool-label">合計罰金プール</div>
         <div className="pool-amount">
-          <span>¥</span>{totalPool.toLocaleString()}
+          <span>¥</span>{loading ? '–' : totalPool.toLocaleString()}
         </div>
-        <div className="pool-note">
-          {year}年{MONTHS_JP[month - 1]} 累計
-        </div>
+        <div className="pool-note">{year}年{MONTHS_JP[month - 1]} 累計</div>
       </div>
 
       {loading ? (
-        <div className="loading-state">
-          <div className="spinner" />
-          <span>集計中...</span>
+        /* スケルトン */
+        <div className="ranking-list">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rank-item" style={{ opacity: 0.2 }}>
+              <div className="rank-num other">{i + 1}</div>
+              <div className="rank-avatar" style={{ background: 'var(--bg-elevated)' }} />
+              <div className="rank-info">
+                <div style={{ height: 14, width: 80, background: 'var(--bg-elevated)', borderRadius: 6 }} />
+                <div style={{ height: 11, width: 120, background: 'var(--bg-elevated)', borderRadius: 6, marginTop: 6 }} />
+              </div>
+              <div style={{ height: 20, width: 50, background: 'var(--bg-elevated)', borderRadius: 6 }} />
+            </div>
+          ))}
         </div>
       ) : ranks.length === 0 ? (
         <div className="loading-state">
@@ -128,9 +129,7 @@ export function RankingPage() {
         </div>
       ) : (
         <div className="ranking-list">
-          {ranks.map((r, idx) => (
-            <RankItem key={r.user.id} rank={r} position={idx + 1} />
-          ))}
+          {ranks.map((r, idx) => <RankItem key={r.user.id} rank={r} position={idx + 1} />)}
         </div>
       )}
     </div>
@@ -139,7 +138,6 @@ export function RankingPage() {
 
 function RankItem({ rank, position }: { rank: UserRank; position: number }) {
   const rankClass = position === 1 ? 'r1' : position === 2 ? 'r2' : position === 3 ? 'r3' : 'other';
-
   return (
     <div className={`rank-item ${rank.fine === 0 ? 'rank-zero' : ''}`}>
       <div className={`rank-num ${rankClass}`}>{position}</div>
@@ -153,12 +151,8 @@ function RankItem({ rank, position }: { rank: UserRank; position: number }) {
         </div>
       </div>
       <div className="rank-fine">
-        <div className="rank-fine-amount">
-          ¥{rank.fine.toLocaleString()}
-        </div>
-        <div className="rank-fine-label">
-          {rank.fine === 0 ? '罰金なし' : '罰金'}
-        </div>
+        <div className="rank-fine-amount">¥{rank.fine.toLocaleString()}</div>
+        <div className="rank-fine-label">{rank.fine === 0 ? '罰金なし' : '罰金'}</div>
       </div>
     </div>
   );

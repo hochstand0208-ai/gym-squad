@@ -241,6 +241,43 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 0;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-btn:hover { color: var(--text); }
+
+.existing-users-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.existing-user-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, transform 0.1s, background 0.15s;
+}
+.existing-user-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
+.existing-user-btn:active { transform: scale(0.95); }
+
 .modal-title {
   font-size: 24px;
   font-weight: 900;
@@ -468,6 +505,50 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 }
 .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state-text { font-size: 14px; line-height: 1.6; }
+
+/* ─── User Filter Row ────────────────────────────── */
+.user-filter-row {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.user-filter-row::-webkit-scrollbar { display: none; }
+
+.user-filter-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-family: inherit;
+  color: var(--text-secondary);
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  min-width: 56px;
+}
+.user-filter-chip:active { transform: scale(0.94); }
+.user-filter-chip.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--text);
+}
+
+.filter-chip-avatar { font-size: 22px; line-height: 1; }
+.filter-chip-name {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ─── Calendar Page ──────────────────────────────── */
 .calendar-header {

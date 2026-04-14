@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { User } from './types';
 import { saveUser } from './firebase';
+import { WorkoutProvider } from './WorkoutContext';
 import { UserSetup } from './components/UserSetup';
 import { TabBar } from './components/TabBar';
 import { HomePage } from './pages/HomePage';
@@ -53,17 +54,19 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      {!user && <UserSetup onComplete={handleUserComplete} />}
+    <WorkoutProvider>
+      <div className="app">
+        {!user && <UserSetup onComplete={handleUserComplete} />}
 
-      {user && (
-        <>
-          {tab === 'home' && <HomePage user={user} />}
-          {tab === 'calendar' && <CalendarPage />}
-          {tab === 'ranking' && <RankingPage />}
-          <TabBar active={tab} onChange={setTab} />
-        </>
-      )}
-    </div>
+        {user && (
+          <>
+            {tab === 'home' && <HomePage user={user} />}
+            {tab === 'calendar' && <CalendarPage />}
+            {tab === 'ranking' && <RankingPage />}
+            <TabBar active={tab} onChange={setTab} />
+          </>
+        )}
+      </div>
+    </WorkoutProvider>
   );
 }

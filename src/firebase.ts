@@ -16,14 +16,13 @@ import {
 } from 'firebase/firestore';
 import type { User, Workout } from './types';
 
-// ↓ Firebase コンソールの値に書き換えてください
 const firebaseConfig = {
-  apiKey: "ここに自分の値",
-  authDomain: "ここに自分の値",
-  projectId: "ここに自分の値",
-  storageBucket: "ここに自分の値",
-  messagingSenderId: "ここに自分の値",
-  appId: "ここに自分の値",
+  apiKey: "AIzaSyA1FhQS3DNXMIMSqODnQa7vU2-u2ZOcBZU",
+  authDomain: "gym-squad-44ee1.firebaseapp.com",
+  projectId: "gym-squad-44ee1",
+  storageBucket: "gym-squad-44ee1.firebasestorage.app",
+  messagingSenderId: "1008145950257",
+  appId: "1:1008145950257:web:5389edef4ebaefe8ce1710",
 };
 
 const app = initializeApp(firebaseConfig);
