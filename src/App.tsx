@@ -34,6 +34,11 @@ export default function App() {
     const stored = loadUserFromStorage();
     setUser(stored);
     setReady(true);
+    // localStorageにユーザーがいれば Firestore に再同期
+    // （初回登録時にルール未設定で保存失敗していた場合の救済）
+    if (stored) {
+      saveUser(stored).catch(console.error);
+    }
   }, []);
 
   const handleUserComplete = async (newUser: User) => {
