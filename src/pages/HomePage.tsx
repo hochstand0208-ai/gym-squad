@@ -4,6 +4,7 @@ import { isStrengthDetail, isCardioDetail } from '../types';
 import { saveWorkout, subscribeToDateWorkouts } from '../firebase';
 import { SuccessAnimation } from '../components/SuccessAnimation';
 import { ProfileEditModal } from '../components/ProfileEditModal';
+import { AvatarImg } from '../components/AvatarImg';
 import { useWorkouts } from '../WorkoutContext';
 
 const CARDIO_TYPES = ['ランニング', 'サイクリング', '水泳', 'ウォーキング', '縄跳び', 'その他'];
@@ -155,7 +156,7 @@ export function HomePage({ user, onUpdateUser }: Props) {
         {/* Header */}
         <div className="home-header">
           <button className="home-profile-btn" onClick={() => setShowEditProfile(true)}>
-            <div className="home-avatar">{user.avatar}</div>
+            <AvatarImg avatar={user.avatar} size={52} />
             <div>
               <div className="home-greeting">{greeting}</div>
               <div className="home-name">
@@ -362,7 +363,7 @@ function WorkoutCard({ workout, isMe, currentUser }: { workout: Workout; isMe: b
 
   return (
     <div className="workout-item" style={isMe ? { borderColor: type === 'cardio' ? 'rgba(0,230,118,0.3)' : 'rgba(255,107,43,0.3)' } : {}}>
-      <div className="workout-item-avatar">{displayAvatar}</div>
+      <AvatarImg avatar={displayAvatar} size={40} className="workout-item-avatar" />
       <div className="workout-item-body">
         <div className="workout-item-user">
           {displayName}

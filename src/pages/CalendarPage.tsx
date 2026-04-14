@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Workout } from '../types';
 import { isStrengthDetail, isCardioDetail } from '../types';
 import { useWorkouts } from '../WorkoutContext';
+import { AvatarImg } from '../components/AvatarImg';
 
 const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const MONTHS_JP = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
@@ -244,7 +245,7 @@ function DayDetailItem({ workout }: { workout: Workout }) {
 
   return (
     <div className="workout-item" style={{ marginBottom: 10 }}>
-      <div className="workout-item-avatar">{workout.avatar}</div>
+      <AvatarImg avatar={workout.avatar} size={40} className="workout-item-avatar" />
       <div className="workout-item-body">
         <div className="workout-item-user">{workout.nickname}</div>
         <div className={`workout-item-type ${type}`}>

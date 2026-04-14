@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
   getFirestore,
   collection,
@@ -27,6 +28,36 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ─── Storage ─────────────────────────────────────
+/** 写真をリサイズして Firebase Storage にアップロードし、ダウンロードURLを返す */
+export async function uploadAvatarPhoto(userId: string, file: File): Promise<string> {
+  const blob = await resizeImage(file, 300);
+  const storageRef = ref(storage, `avatars/${userId}`);
+  await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+  return getDownloadURL(storageRef);
+}
+
+function resizeImage(file: File, maxSize: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/jpeg', 0.85);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 // ─── User ────────────────────────────────────────────────
 export async function saveUser(user: User): Promise<void> {

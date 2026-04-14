@@ -395,6 +395,38 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   opacity: 0.5;
 }
 
+.photo-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  background: var(--bg-elevated);
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.photo-upload-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .profile-edit-box {
   max-height: 88vh;
   overflow-y: auto;
@@ -408,16 +440,9 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   margin-bottom: 24px;
 }
 
-.profile-preview-avatar {
-  font-size: 56px;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated);
-  border-radius: 50%;
-  border: 2px solid var(--border);
+.profile-preview-avatar-wrap {
+  position: relative;
+  display: inline-flex;
 }
 
 .profile-preview-name {

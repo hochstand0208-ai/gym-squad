@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { User, Workout } from '../types';
 import { useWorkouts } from '../WorkoutContext';
+import { AvatarImg } from '../components/AvatarImg';
 
 const MONTHS_JP = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 const FINE_PER_DAY = 100;
@@ -155,7 +156,7 @@ function RankItem({ rank, position }: { rank: UserRank; position: number }) {
   return (
     <div className={`rank-item ${rank.fine === 0 ? 'rank-zero' : ''}`}>
       <div className={`rank-num ${rankClass}`}>{position}</div>
-      <div className="rank-avatar">{rank.user.avatar}</div>
+      <AvatarImg avatar={rank.user.avatar} size={44} className="rank-avatar" />
       <div className="rank-info">
         <div className="rank-name">{rank.user.nickname}</div>
         <div className="rank-detail">
