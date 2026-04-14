@@ -14,13 +14,15 @@ interface Props {
   user: User;
   onSave: (updated: User) => void;
   onClose: () => void;
+  onLogout: () => void;
 }
 
-export function ProfileEditModal({ user, onSave, onClose }: Props) {
+export function ProfileEditModal({ user, onSave, onClose, onLogout }: Props) {
   const [nickname, setNickname] = useState(user.nickname);
   const [avatar, setAvatar] = useState(user.avatar);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +139,39 @@ export function ProfileEditModal({ user, onSave, onClose }: Props) {
             保存する
           </button>
         </div>
+
+        {/* ログアウト */}
+        <button
+          style={{ width: '100%', marginTop: 16, padding: '12px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}
+          onClick={() => setShowLogoutConfirm(true)}
+        >
+          アカウントを切り替える
+        </button>
+
+        {/* ログアウト確認 */}
+        {showLogoutConfirm && (
+          <div style={{ marginTop: 8, background: 'var(--bg-elevated)', borderRadius: 12, padding: '14px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, textAlign: 'center' }}>
+              このデバイスからログアウトします。<br />データは削除されません。
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn"
+                style={{ flex: 1, background: 'var(--bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontSize: 13 }}
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                戻る
+              </button>
+              <button
+                className="btn"
+                style={{ flex: 1, background: '#ff4444', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700 }}
+                onClick={onLogout}
+              >
+                ログアウト
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

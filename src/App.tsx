@@ -53,6 +53,11 @@ export default function App() {
     saveUser(updated).catch(console.error);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
+  };
+
   if (!ready) {
     return (
       <div className="app">
@@ -70,7 +75,7 @@ export default function App() {
 
         {user && (
           <>
-            {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} />}
+            {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />}
             {tab === 'calendar' && <CalendarPage />}
             {tab === 'ranking' && <RankingPage user={user} />}
             <TabBar active={tab} onChange={setTab} />
