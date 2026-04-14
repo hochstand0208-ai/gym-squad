@@ -321,7 +321,7 @@ export function HomePage({ user, onUpdateUser }: Props) {
             </div>
           ) : (
             todayWorkouts.map(w => (
-              <WorkoutCard key={w.id} workout={w} isMe={w.userId === user.id} />
+              <WorkoutCard key={w.id} workout={w} isMe={w.userId === user.id} currentUser={user} />
             ))
           )}
         </div>
@@ -330,8 +330,11 @@ export function HomePage({ user, onUpdateUser }: Props) {
   );
 }
 
-function WorkoutCard({ workout, isMe }: { workout: Workout; isMe: boolean }) {
+function WorkoutCard({ workout, isMe, currentUser }: { workout: Workout; isMe: boolean; currentUser: User }) {
   const { details, type } = workout;
+  // 自分の記録は常に最新のアバター・名前で表示
+  const displayAvatar = isMe ? currentUser.avatar : workout.avatar;
+  const displayName  = isMe ? currentUser.nickname : workout.nickname;
 
   let detailText = '';
   if (isStrengthDetail(details)) {
@@ -344,10 +347,10 @@ function WorkoutCard({ workout, isMe }: { workout: Workout; isMe: boolean }) {
 
   return (
     <div className="workout-item" style={isMe ? { borderColor: type === 'cardio' ? 'rgba(0,230,118,0.3)' : 'rgba(255,107,43,0.3)' } : {}}>
-      <div className="workout-item-avatar">{workout.avatar}</div>
+      <div className="workout-item-avatar">{displayAvatar}</div>
       <div className="workout-item-body">
         <div className="workout-item-user">
-          {workout.nickname}
+          {displayName}
           {isMe && <span style={{ color: 'var(--text-secondary)', fontWeight: 400, fontSize: 11, marginLeft: 6 }}>（自分）</span>}
         </div>
         <div className={`workout-item-type ${type}`}>
