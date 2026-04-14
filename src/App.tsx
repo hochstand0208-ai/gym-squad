@@ -58,6 +58,11 @@ export default function App() {
     setUser(null);
   };
 
+  const handleDeleteAccount = () => {
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
+  };
+
   if (!ready) {
     return (
       <div className="app">
@@ -75,7 +80,7 @@ export default function App() {
 
         {user && (
           <>
-            {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />}
+            {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} onLogout={handleLogout} onDeleteAccount={handleDeleteAccount} />}
             {tab === 'calendar' && <CalendarPage />}
             {tab === 'ranking' && <RankingPage user={user} />}
             <TabBar active={tab} onChange={setTab} />

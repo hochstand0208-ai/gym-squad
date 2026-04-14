@@ -17,6 +17,7 @@ interface Props {
   user: User;
   onUpdateUser: (updated: User) => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
 }
 
 interface StrengthForm {
@@ -37,7 +38,7 @@ interface CardioForm {
 const defaultStrength: StrengthForm = { exercise: '', sets: '', reps: '', weight: '', memo: '' };
 const defaultCardio: CardioForm = { exercise: CARDIO_TYPES[0], duration: '', distance: '', memo: '' };
 
-export function HomePage({ user, onUpdateUser, onLogout }: Props) {
+export function HomePage({ user, onUpdateUser, onLogout, onDeleteAccount }: Props) {
   const [selectedType, setSelectedType] = useState<WorkoutType | null>(null);
   const [strengthForm, setStrengthForm] = useState<StrengthForm>(defaultStrength);
   const [cardioForm, setCardioForm] = useState<CardioForm>(defaultCardio);
@@ -151,6 +152,7 @@ export function HomePage({ user, onUpdateUser, onLogout }: Props) {
           onSave={updated => { onUpdateUser(updated); setShowEditProfile(false); }}
           onClose={() => setShowEditProfile(false)}
           onLogout={onLogout}
+          onDeleteAccount={onDeleteAccount}
         />
       )}
 

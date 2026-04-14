@@ -8,6 +8,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  deleteDoc,
   query,
   where,
   orderBy,
@@ -73,6 +74,10 @@ export async function getUser(userId: string): Promise<User | null> {
   if (!snap.exists()) return null;
   const d = snap.data();
   return { id: snap.id, nickname: d.nickname, avatar: d.avatar, createdAt: d.createdAt };
+}
+
+export async function deleteUser(userId: string): Promise<void> {
+  await deleteDoc(doc(db, 'users', userId));
 }
 
 export async function getAllUsers(): Promise<User[]> {

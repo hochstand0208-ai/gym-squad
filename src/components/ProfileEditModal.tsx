@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import type { User } from '../types';
-import { uploadAvatarPhoto } from '../firebase';
+import { uploadAvatarPhoto, deleteUser } from '../firebase';
 import { AvatarImg } from './AvatarImg';
 
 const AVATAR_GROUPS = [
@@ -15,15 +15,30 @@ interface Props {
   onSave: (updated: User) => void;
   onClose: () => void;
   onLogout: () => void;
+  onDeleteAccount: () => void;
 }
 
-export function ProfileEditModal({ user, onSave, onClose, onLogout }: Props) {
+export function ProfileEditModal({ user, onSave, onClose, onLogout, onDeleteAccount }: Props) {
   const [nickname, setNickname] = useState(user.nickname);
   const [avatar, setAvatar] = useState(user.avatar);
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await deleteUser(user.id);
+      onDeleteAccount();
+    } catch (e) {
+      console.error(e);
+      alert('削除に失敗しました');
+      setDeleting(false);
+    }
+  };
 
   const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -140,10 +155,10 @@ export function ProfileEditModal({ user, onSave, onClose, onLogout }: Props) {
           </button>
         </div>
 
-        {/* ログアウト */}
+        {/* アカウント切り替え */}
         <button
           style={{ width: '100%', marginTop: 16, padding: '12px', background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}
-          onClick={() => setShowLogoutConfirm(true)}
+          onClick={() => { setShowLogoutConfirm(true); setShowDeleteConfirm(false); }}
         >
           アカウントを切り替える
         </button>
@@ -168,6 +183,44 @@ export function ProfileEditModal({ user, onSave, onClose, onLogout }: Props) {
                 onClick={onLogout}
               >
                 ログアウト
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* アカウント削除 */}
+        <button
+          style={{ width: '100%', marginTop: 4, padding: '12px', background: 'none', border: 'none', color: '#ff4444', fontSize: 12, cursor: 'pointer', opacity: 0.7 }}
+          onClick={() => { setShowDeleteConfirm(true); setShowLogoutConfirm(false); }}
+        >
+          アカウントを削除する
+        </button>
+
+        {/* 削除確認 */}
+        {showDeleteConfirm && (
+          <div style={{ marginTop: 8, background: 'rgba(255,68,68,0.08)', borderRadius: 12, padding: '14px', border: '1px solid rgba(255,68,68,0.3)' }}>
+            <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 4, fontWeight: 700, textAlign: 'center' }}>
+              本当に削除しますか？
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12, textAlign: 'center' }}>
+              アカウント情報が完全に削除されます。<br />過去のワークアウト記録は残ります。
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                className="btn"
+                style={{ flex: 1, background: 'var(--bg)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontSize: 13 }}
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                戻る
+              </button>
+              <button
+                className="btn"
+                style={{ flex: 1, background: '#ff4444', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700 }}
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+              >
+                {deleting ? '削除中...' : '削除する'}
               </button>
             </div>
           </div>
