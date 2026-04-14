@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import type { User, Workout } from '../types';
 import { useWorkouts } from '../WorkoutContext';
 import { AvatarImg } from '../components/AvatarImg';
+import { getFineRate, setFineRate } from '../firebase';
 
 const MONTHS_JP = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-const FINE_PER_DAY = 100;
+const RATE_OPTIONS = [50, 100, 200];
 
 interface UserRank {
   user: User;
@@ -54,8 +55,19 @@ export function RankingPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
+  const [finePerDay, setFinePerDay] = useState(100);
+  const [rateLoading, setRateLoading] = useState(true);
 
   const { users, usersLoading, monthCache, fetchMonth } = useWorkouts();
+
+  useEffect(() => {
+    getFineRate().then(r => { setFinePerDay(r); setRateLoading(false); });
+  }, []);
+
+  const handleRateChange = async (rate: number) => {
+    setFinePerDay(rate);
+    await setFineRate(rate);
+  };
 
   useEffect(() => {
     fetchMonth(year, month);
@@ -70,10 +82,10 @@ export function RankingPage() {
       .map(user => {
         const uw = workouts.filter(w => w.userId === user.id);
         const { missedDays, workedDays } = calcStats(uw, user, year, month);
-        return { user, missedDays, fine: missedDays * FINE_PER_DAY, workedDays };
+        return { user, missedDays, fine: missedDays * finePerDay, workedDays };
       })
       .sort((a, b) => b.fine - a.fine);
-  }, [workouts, users, year, month]);
+  }, [workouts, users, year, month, finePerDay]);
 
   const totalPool = ranks.reduce((s, r) => s + r.fine, 0);
 
@@ -101,7 +113,7 @@ export function RankingPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div className="ranking-title">💰 罰金ランキング</div>
-            <div className="ranking-subtitle">運動しなかった日 × ¥{FINE_PER_DAY.toLocaleString()}</div>
+            <div className="ranking-subtitle">運動しなかった日 × ¥{finePerDay.toLocaleString()}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <button className="month-nav-btn" onClick={prevMonth}>‹</button>
@@ -109,6 +121,23 @@ export function RankingPage() {
               {year}年{MONTHS_JP[month - 1]}
             </div>
             <button className="month-nav-btn" onClick={nextMonth} disabled={isNextDisabled} style={{ opacity: isNextDisabled ? 0.3 : 1 }}>›</button>
+          </div>
+        </div>
+
+        {/* レート選択 */}
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>罰金レート</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {RATE_OPTIONS.map(rate => (
+              <button
+                key={rate}
+                className={`rate-btn ${finePerDay === rate ? 'active' : ''}`}
+                onClick={() => handleRateChange(rate)}
+                disabled={rateLoading}
+              >
+                ¥{rate}
+              </button>
+            ))}
           </div>
         </div>
       </div>

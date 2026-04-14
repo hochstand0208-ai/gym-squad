@@ -128,6 +128,20 @@ export function subscribeToDateWorkouts(
   });
 }
 
+// ─── Settings ────────────────────────────────────────────
+const SETTINGS_DOC = doc(db, 'settings', 'global');
+
+export async function getFineRate(): Promise<number> {
+  const snap = await getDoc(SETTINGS_DOC);
+  if (!snap.exists()) return 100;
+  return (snap.data().fineRate as number) ?? 100;
+}
+
+export async function setFineRate(rate: number): Promise<void> {
+  await setDoc(SETTINGS_DOC, { fineRate: rate }, { merge: true });
+}
+
+// ─── Workout ─────────────────────────────────────────────
 export async function getWorkoutsForMonth(year: number, month: number): Promise<Workout[]> {
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
   const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
