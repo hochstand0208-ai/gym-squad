@@ -273,6 +273,7 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   padding: 18px 12px;
   cursor: pointer;
   font-family: inherit;
+  color: var(--text);
   transition: border-color 0.15s, transform 0.1s, background 0.15s;
 }
 .existing-user-btn:hover { border-color: var(--accent); background: var(--accent-dim); }
