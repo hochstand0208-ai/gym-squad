@@ -347,10 +347,12 @@ export function HomePage({ user, onUpdateUser }: Props) {
 }
 
 function WorkoutCard({ workout, isMe, currentUser }: { workout: Workout; isMe: boolean; currentUser: User }) {
+  const { users } = useWorkouts();
   const { details, type } = workout;
-  // 自分の記録は常に最新のアバター・名前で表示
-  const displayAvatar = isMe ? currentUser.avatar : workout.avatar;
-  const displayName  = isMe ? currentUser.nickname : workout.nickname;
+  // 最新のユーザー情報（自分はcurrentUser、他者はcontextのusersから）
+  const latestUser = isMe ? currentUser : (users.find(u => u.id === workout.userId) ?? null);
+  const displayAvatar = latestUser?.avatar ?? workout.avatar;
+  const displayName  = latestUser?.nickname ?? workout.nickname;
 
   let detailText = '';
   if (isStrengthDetail(details)) {
