@@ -110,6 +110,21 @@ export function HomePage({ user, onUpdateUser }: Props) {
       // カレンダー・ランキングのキャッシュを更新
       const now2 = new Date();
       invalidateMonth(now2.getFullYear(), now2.getMonth() + 1);
+      // LINE通知（失敗してもワークアウト保存は成功扱い）
+      const notifyDetails = selectedType === 'strength'
+        ? { exercise: strengthForm.exercise.trim(), sets: parseInt(strengthForm.sets), reps: parseInt(strengthForm.reps), ...(strengthForm.weight ? { weight: parseFloat(strengthForm.weight) } : {}) }
+        : { exercise: cardioForm.exercise, duration: parseInt(cardioForm.duration), ...(cardioForm.distance ? { distance: parseFloat(cardioForm.distance) } : {}) };
+      fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nickname: user.nickname,
+          avatar: user.avatar,
+          type: selectedType,
+          details: notifyDetails,
+          memo: selectedType === 'strength' ? strengthForm.memo.trim() : cardioForm.memo.trim(),
+        }),
+      }).catch(console.error);
     } catch (e) {
       console.error(e);
       alert('保存に失敗しました。Firebase の設定を確認してください。');
