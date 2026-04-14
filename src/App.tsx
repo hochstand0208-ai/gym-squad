@@ -72,7 +72,7 @@ export default function App() {
           <>
             {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} />}
             {tab === 'calendar' && <CalendarPage />}
-            {tab === 'ranking' && <RankingPage />}
+            {tab === 'ranking' && <RankingPage user={user} />}
             <TabBar active={tab} onChange={setTab} />
           </>
         )}

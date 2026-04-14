@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import type { User, Workout } from '../types';
 import { useWorkouts } from '../WorkoutContext';
 import { AvatarImg } from '../components/AvatarImg';
-import { getFineRate, setFineRate } from '../firebase';
+import { getFineRateSettings, setFineRate } from '../firebase';
+import type { FineRateSettings } from '../firebase';
 
 const MONTHS_JP = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 const RATE_OPTIONS = [50, 100, 200];
@@ -27,18 +28,15 @@ function calcStats(workouts: Workout[], user: User, year: number, month: number)
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
   const lastDay = isCurrentMonth ? now.getDate() : daysInMonth(year, month);
 
-  // 登録日を基点にする
   const reg = new Date(user.createdAt);
   const regYear = reg.getFullYear();
   const regMonth = reg.getMonth() + 1;
   const regDay = reg.getDate();
 
-  // 登録月より後の月を表示している場合は対象外（罰金ゼロ）
   if (regYear > year || (regYear === year && regMonth > month)) {
     return { missedDays: 0, workedDays: 0 };
   }
 
-  // 開始日：登録月なら登録日から、それ以前の月なら1日から
   const startDay = (regYear === year && regMonth === month) ? regDay : 1;
 
   const workedSet = new Set<string>();
@@ -51,23 +49,29 @@ function calcStats(workouts: Workout[], user: User, year: number, month: number)
   return { missedDays: missed, workedDays: workedSet.size };
 }
 
-export function RankingPage() {
+function formatChangedAt(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+interface Props {
+  user: User;
+}
+
+export function RankingPage({ user }: Props) {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [finePerDay, setFinePerDay] = useState(100);
+  const [settings, setSettings] = useState<FineRateSettings>({ rate: 100, previousRate: null, changedBy: null, changedByAvatar: null, changedAt: null });
   const [rateLoading, setRateLoading] = useState(true);
+  const [pendingRate, setPendingRate] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const { users, usersLoading, monthCache, fetchMonth } = useWorkouts();
 
   useEffect(() => {
-    getFineRate().then(r => { setFinePerDay(r); setRateLoading(false); });
+    getFineRateSettings().then(s => { setSettings(s); setRateLoading(false); });
   }, []);
-
-  const handleRateChange = async (rate: number) => {
-    setFinePerDay(rate);
-    await setFineRate(rate);
-  };
 
   useEffect(() => {
     fetchMonth(year, month);
@@ -76,13 +80,15 @@ export function RankingPage() {
   const workouts = monthCache[`${year}-${month}`] ?? null;
   const loading = workouts === null || usersLoading;
 
+  const finePerDay = settings.rate;
+
   const ranks = useMemo<UserRank[]>(() => {
     if (!workouts || users.length === 0) return [];
     return users
-      .map(user => {
-        const uw = workouts.filter(w => w.userId === user.id);
-        const { missedDays, workedDays } = calcStats(uw, user, year, month);
-        return { user, missedDays, fine: missedDays * finePerDay, workedDays };
+      .map(u => {
+        const uw = workouts.filter(w => w.userId === u.id);
+        const { missedDays, workedDays } = calcStats(uw, u, year, month);
+        return { user: u, missedDays, fine: missedDays * finePerDay, workedDays };
       })
       .sort((a, b) => b.fine - a.fine);
   }, [workouts, users, year, month, finePerDay]);
@@ -106,6 +112,21 @@ export function RankingPage() {
     const nextY = month === 12 ? year + 1 : year;
     return nextY > now.getFullYear() || (nextY === now.getFullYear() && nextM > now.getMonth() + 1);
   })();
+
+  const handleConfirmRate = async () => {
+    if (pendingRate === null) return;
+    setSaving(true);
+    await setFineRate(pendingRate, settings.rate, user.nickname, user.avatar);
+    setSettings({
+      rate: pendingRate,
+      previousRate: settings.rate,
+      changedBy: user.nickname,
+      changedByAvatar: user.avatar,
+      changedAt: Date.now(),
+    });
+    setPendingRate(null);
+    setSaving(false);
+  };
 
   return (
     <div className="page">
@@ -132,7 +153,7 @@ export function RankingPage() {
               <button
                 key={rate}
                 className={`rate-btn ${finePerDay === rate ? 'active' : ''}`}
-                onClick={() => handleRateChange(rate)}
+                onClick={() => { if (rate !== finePerDay) setPendingRate(rate); }}
                 disabled={rateLoading}
               >
                 ¥{rate}
@@ -140,6 +161,18 @@ export function RankingPage() {
             ))}
           </div>
         </div>
+
+        {/* 変更履歴 */}
+        {!rateLoading && settings.changedBy && settings.changedAt && (
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+            <AvatarImg avatar={settings.changedByAvatar ?? ''} size={16} />
+            <span>
+              {settings.changedBy}が
+              {settings.previousRate != null ? ` ¥${settings.previousRate} → ` : ' '}
+              ¥{settings.rate} に変更（{formatChangedAt(settings.changedAt)}）
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Pool total */}
@@ -152,7 +185,6 @@ export function RankingPage() {
       </div>
 
       {loading ? (
-        /* スケルトン */
         <div className="ranking-list">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="rank-item" style={{ opacity: 0.2 }}>
@@ -174,6 +206,54 @@ export function RankingPage() {
       ) : (
         <div className="ranking-list">
           {ranks.map((r, idx) => <RankItem key={r.user.id} rank={r} position={idx + 1} />)}
+        </div>
+      )}
+
+      {/* レート変更確認モーダル */}
+      {pendingRate !== null && (
+        <div className="modal-overlay" onClick={() => setPendingRate(null)}>
+          <div className="modal-box" style={{ maxWidth: 320 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-title" style={{ fontSize: 18 }}>罰金レートの変更</div>
+
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--accent)' }}>
+                ¥{settings.rate} → ¥{pendingRate}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
+                全員に即座に適用されます
+              </div>
+            </div>
+
+            {settings.changedBy && settings.changedAt && (
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AvatarImg avatar={settings.changedByAvatar ?? ''} size={20} />
+                <span>
+                  前回：{settings.changedBy}が
+                  {settings.previousRate != null ? ` ¥${settings.previousRate} → ` : ' '}
+                  ¥{settings.rate} に変更（{formatChangedAt(settings.changedAt)}）
+                </span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                className="btn"
+                style={{ flex: 1, background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1.5px solid var(--border)' }}
+                onClick={() => setPendingRate(null)}
+                disabled={saving}
+              >
+                キャンセル
+              </button>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={handleConfirmRate}
+                disabled={saving}
+              >
+                {saving ? '変更中...' : '変更する'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

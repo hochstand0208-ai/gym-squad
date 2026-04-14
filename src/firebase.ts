@@ -131,14 +131,35 @@ export function subscribeToDateWorkouts(
 // ─── Settings ────────────────────────────────────────────
 const SETTINGS_DOC = doc(db, 'settings', 'global');
 
-export async function getFineRate(): Promise<number> {
-  const snap = await getDoc(SETTINGS_DOC);
-  if (!snap.exists()) return 100;
-  return (snap.data().fineRate as number) ?? 100;
+export interface FineRateSettings {
+  rate: number;
+  previousRate: number | null;
+  changedBy: string | null;
+  changedByAvatar: string | null;
+  changedAt: number | null;
 }
 
-export async function setFineRate(rate: number): Promise<void> {
-  await setDoc(SETTINGS_DOC, { fineRate: rate }, { merge: true });
+export async function getFineRateSettings(): Promise<FineRateSettings> {
+  const snap = await getDoc(SETTINGS_DOC);
+  if (!snap.exists()) return { rate: 100, previousRate: null, changedBy: null, changedByAvatar: null, changedAt: null };
+  const d = snap.data();
+  return {
+    rate: (d.fineRate as number) ?? 100,
+    previousRate: (d.fineRatePrevious as number) ?? null,
+    changedBy: (d.fineRateChangedBy as string) ?? null,
+    changedByAvatar: (d.fineRateChangedByAvatar as string) ?? null,
+    changedAt: (d.fineRateChangedAt as number) ?? null,
+  };
+}
+
+export async function setFineRate(rate: number, previousRate: number, changedBy: string, changedByAvatar: string): Promise<void> {
+  await setDoc(SETTINGS_DOC, {
+    fineRate: rate,
+    fineRatePrevious: previousRate,
+    fineRateChangedBy: changedBy,
+    fineRateChangedByAvatar: changedByAvatar,
+    fineRateChangedAt: Date.now(),
+  }, { merge: true });
 }
 
 // ─── Workout ─────────────────────────────────────────────
