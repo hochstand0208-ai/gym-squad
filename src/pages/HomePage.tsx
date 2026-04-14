@@ -73,7 +73,7 @@ export function HomePage({ user }: Props) {
             exercise: strengthForm.exercise.trim(),
             sets: parseInt(strengthForm.sets),
             reps: parseInt(strengthForm.reps),
-            weight: strengthForm.weight ? parseFloat(strengthForm.weight) : undefined,
+            ...(strengthForm.weight ? { weight: parseFloat(strengthForm.weight) } : {}),
           },
           memo: strengthForm.memo.trim(),
           date: today,
@@ -94,7 +94,7 @@ export function HomePage({ user }: Props) {
           details: {
             exercise: cardioForm.exercise,
             duration: parseInt(cardioForm.duration),
-            distance: cardioForm.distance ? parseFloat(cardioForm.distance) : undefined,
+            ...(cardioForm.distance ? { distance: parseFloat(cardioForm.distance) } : {}),
           },
           memo: cardioForm.memo.trim(),
           date: today,
