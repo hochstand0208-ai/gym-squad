@@ -20,16 +20,30 @@ function daysInMonth(y: number, m: number) {
   return new Date(y, m, 0).getDate();
 }
 
-function calcStats(workouts: Workout[], year: number, month: number) {
+function calcStats(workouts: Workout[], user: User, year: number, month: number) {
   const now = new Date();
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
   const lastDay = isCurrentMonth ? now.getDate() : daysInMonth(year, month);
+
+  // 登録日を基点にする
+  const reg = new Date(user.createdAt);
+  const regYear = reg.getFullYear();
+  const regMonth = reg.getMonth() + 1;
+  const regDay = reg.getDate();
+
+  // 登録月より後の月を表示している場合は対象外（罰金ゼロ）
+  if (regYear > year || (regYear === year && regMonth > month)) {
+    return { missedDays: 0, workedDays: 0 };
+  }
+
+  // 開始日：登録月なら登録日から、それ以前の月なら1日から
+  const startDay = (regYear === year && regMonth === month) ? regDay : 1;
 
   const workedSet = new Set<string>();
   for (const w of workouts) workedSet.add(w.date);
 
   let missed = 0;
-  for (let d = 1; d <= lastDay; d++) {
+  for (let d = startDay; d <= lastDay; d++) {
     if (!workedSet.has(toDateStr(year, month, d))) missed++;
   }
   return { missedDays: missed, workedDays: workedSet.size };
@@ -54,7 +68,7 @@ export function RankingPage() {
     return users
       .map(user => {
         const uw = workouts.filter(w => w.userId === user.id);
-        const { missedDays, workedDays } = calcStats(uw, year, month);
+        const { missedDays, workedDays } = calcStats(uw, user, year, month);
         return { user, missedDays, fine: missedDays * FINE_PER_DAY, workedDays };
       })
       .sort((a, b) => b.fine - a.fine);
