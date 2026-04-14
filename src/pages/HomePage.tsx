@@ -3,6 +3,7 @@ import type { User, Workout, WorkoutType } from '../types';
 import { isStrengthDetail, isCardioDetail } from '../types';
 import { saveWorkout, subscribeToDateWorkouts } from '../firebase';
 import { SuccessAnimation } from '../components/SuccessAnimation';
+import { ProfileEditModal } from '../components/ProfileEditModal';
 import { useWorkouts } from '../WorkoutContext';
 
 const CARDIO_TYPES = ['ランニング', 'サイクリング', '水泳', 'ウォーキング', '縄跳び', 'その他'];
@@ -13,6 +14,7 @@ function toDateStr(d: Date): string {
 
 interface Props {
   user: User;
+  onUpdateUser: (updated: User) => void;
 }
 
 interface StrengthForm {
@@ -33,12 +35,13 @@ interface CardioForm {
 const defaultStrength: StrengthForm = { exercise: '', sets: '', reps: '', weight: '', memo: '' };
 const defaultCardio: CardioForm = { exercise: CARDIO_TYPES[0], duration: '', distance: '', memo: '' };
 
-export function HomePage({ user }: Props) {
+export function HomePage({ user, onUpdateUser }: Props) {
   const [selectedType, setSelectedType] = useState<WorkoutType | null>(null);
   const [strengthForm, setStrengthForm] = useState<StrengthForm>(defaultStrength);
   const [cardioForm, setCardioForm] = useState<CardioForm>(defaultCardio);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
   const [todayWorkouts, setTodayWorkouts] = useState<Workout[]>([]);
   const { invalidateMonth } = useWorkouts();
 
@@ -125,14 +128,27 @@ export function HomePage({ user }: Props) {
     <>
       <SuccessAnimation show={showSuccess} onComplete={onSuccessComplete} />
 
+      {showEditProfile && (
+        <ProfileEditModal
+          user={user}
+          onSave={updated => { onUpdateUser(updated); setShowEditProfile(false); }}
+          onClose={() => setShowEditProfile(false)}
+        />
+      )}
+
       <div className="page">
         {/* Header */}
         <div className="home-header">
-          <div className="home-avatar">{user.avatar}</div>
-          <div>
-            <div className="home-greeting">{greeting}</div>
-            <div className="home-name">{user.nickname}</div>
-          </div>
+          <button className="home-profile-btn" onClick={() => setShowEditProfile(true)}>
+            <div className="home-avatar">{user.avatar}</div>
+            <div>
+              <div className="home-greeting">{greeting}</div>
+              <div className="home-name">
+                {user.nickname}
+                <span className="home-edit-icon">✏️</span>
+              </div>
+            </div>
+          </button>
           <div className="logo-badge">GYM SQUAD</div>
         </div>
 

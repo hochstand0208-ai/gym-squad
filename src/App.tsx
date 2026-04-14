@@ -44,8 +44,13 @@ export default function App() {
   const handleUserComplete = async (newUser: User) => {
     saveUserToStorage(newUser);
     setUser(newUser);
-    // Save to Firestore in background (best-effort)
     saveUser(newUser).catch(console.error);
+  };
+
+  const handleUpdateUser = (updated: User) => {
+    saveUserToStorage(updated);
+    setUser(updated);
+    saveUser(updated).catch(console.error);
   };
 
   if (!ready) {
@@ -65,7 +70,7 @@ export default function App() {
 
         {user && (
           <>
-            {tab === 'home' && <HomePage user={user} />}
+            {tab === 'home' && <HomePage user={user} onUpdateUser={handleUpdateUser} />}
             {tab === 'calendar' && <CalendarPage />}
             {tab === 'ranking' && <RankingPage />}
             <TabBar active={tab} onChange={setTab} />

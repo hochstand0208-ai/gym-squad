@@ -360,6 +360,22 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
   flex-shrink: 0;
 }
 
+.home-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px 4px 0;
+  border-radius: 14px;
+  transition: background 0.15s;
+  font-family: inherit;
+  text-align: left;
+}
+.home-profile-btn:hover { background: var(--bg-elevated); }
+.home-profile-btn:active { transform: scale(0.97); }
+
 .home-greeting {
   font-size: 13px;
   color: var(--text-secondary);
@@ -368,6 +384,45 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .home-name {
   font-size: 20px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-edit-icon {
+  font-size: 13px;
+  opacity: 0.5;
+}
+
+.profile-edit-box {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.profile-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.profile-preview-avatar {
+  font-size: 56px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+
+.profile-preview-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .logo-badge {
