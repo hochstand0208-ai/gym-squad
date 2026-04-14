@@ -4,7 +4,13 @@ import { useWorkouts } from '../WorkoutContext';
 
 type Screen = 'select' | 'register';
 
-const AVATARS = ['💪', '🦁', '🐯', '🐺', '🦊', '🐻', '🐼', '🦄', '🐸', '🦅', '🐉', '⚡', '🔥', '🌟', '👑', '🚀'];
+const AVATAR_GROUPS = [
+  { label: '猛獣',     items: ['🦁', '🐯', '🐆', '🦈', '🐊', '🐺'] },
+  { label: 'エレメント', items: ['🔥', '⚡', '🌊', '☄️', '🌋', '🌪️'] },
+  { label: 'キャラ',   items: ['🥷', '🤖', '👹', '💀', '🦸', '👺'] },
+  { label: 'パワー',   items: ['💪', '🥊', '🐉', '👑', '🚀', '🦅'] },
+];
+const AVATARS = AVATAR_GROUPS.flatMap(g => g.items);
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -124,15 +130,22 @@ export function UserSetup({ onComplete }: Props) {
         </div>
 
         <div className="form-label" style={{ marginBottom: 8 }}>アバター</div>
-        <div className="avatar-grid">
-          {AVATARS.map(em => (
-            <button
-              key={em}
-              className={`avatar-btn ${avatar === em ? 'selected' : ''}`}
-              onClick={() => setAvatar(em)}
-            >
-              {em}
-            </button>
+        <div className="avatar-groups">
+          {AVATAR_GROUPS.map(group => (
+            <div key={group.label}>
+              <div className="avatar-group-label">{group.label}</div>
+              <div className="avatar-grid">
+                {group.items.map(em => (
+                  <button
+                    key={em}
+                    className={`avatar-btn ${avatar === em ? 'selected' : ''}`}
+                    onClick={() => setAvatar(em)}
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
